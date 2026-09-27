@@ -1,0 +1,5 @@
+/build*/
+/result
+/.direnv/
+/.DS_Store
+/work/
