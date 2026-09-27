@@ -53,3 +53,9 @@ Commit and push small working milestones. Record the exact checks performed, kno
 - Audio tests pass after packaging changes. Native deployment target is 14.2, but runtime validation so far is only on macOS 26.5.1.
 - Relocation verification: copied the .app under `work/relocation-check/`, unset DYLD library-path overrides, and ran its bundled-preset smoke test. Passed at 2000×1276 with 1,643,223 lit pixels, 2,152,104 changed pixels, no GL errors.
 - Final manual folder check: ⇧⌘O opened the native folder panel, selecting `resources/presets` loaded Aurora, and Next Preset switched to Prism. Left the normal development app open in demo mode for the user.
+
+## 2026-09-26 — external preset and texture collections
+
+- Added an idempotent asset installer with pinned Git revisions and atomic staging. It preserves upstream checkouts/notices outside our MIT source and refuses to replace unexpected existing content.
+- Installed Cream of the Crop (0180df21f5e0bd39b9060cc5de420ed2f1f9e509) and the MilkDrop texture pack (6368812f27bc747b517218fbf89d21d59afce4d9) under `~/Library/Application Support/MilkDrop macOS/`.
+- These are separately authored assets; we do not relabel them MIT or infer public-domain status from the upstream collection's license note. Keep their original provenance/notices; they are not bundled in our public app binaries.
