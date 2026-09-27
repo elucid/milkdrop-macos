@@ -70,6 +70,8 @@ Requires Apple Silicon and targets macOS 14.2+. Runtime validation so far is onl
 
 The package includes `Read Me.html` and `Contents/Resources/Source/Provenance.txt` with revisions and source information. Extract the accompanying source archive into an empty folder to rebuild; it includes the renderer and nested dependencies without Git metadata. `MilkDropMac.app/Contents/MacOS/MilkDropMac --check-assets` prints collection/texture paths and the preset count without starting the UI.
 
+Run `./scripts/package-test.sh` (or pass the release output directory) in a graphical macOS session to verify extracted ZIP/installer payloads, code signatures, source delivery, runtime dependencies, fresh-user asset discovery, user overrides, and positive/negative texture rendering. It opens temporary rendering windows but does not run Installer or install into Applications.
+
 ## Use
 
 The app starts with **synthetic demo audio**; it does not play sound.
