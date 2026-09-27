@@ -59,3 +59,16 @@ Commit and push small working milestones. Record the exact checks performed, kno
 - Added an idempotent asset installer with pinned Git revisions and atomic staging. It preserves upstream checkouts/notices outside our MIT source and refuses to replace unexpected existing content.
 - Installed Cream of the Crop (0180df21f5e0bd39b9060cc5de420ed2f1f9e509) and the MilkDrop texture pack (6368812f27bc747b517218fbf89d21d59afce4d9) under `~/Library/Application Support/MilkDrop macOS/`.
 - These are separately authored assets; we do not relabel them MIT or infer public-domain status from the upstream collection's license note. Keep their original provenance/notices; they are not bundled in our public app binaries.
+
+## 2026-09-26 — shuffle, shared textures and library browser
+
+- Discover the installed collection at launch, or restore a previously chosen folder. Scan off the UI thread; reject stale scan results when another folder was selected meanwhile.
+- Added a randomized no-repeat deck, automatic switching (30 seconds by default; 10/15/30/60/120 selectable), a countdown, smooth two-second transitions, manual shuffle and persistent settings. Manual selection restarts the interval. Pause countdown while minimized, showing a sheet, or searching in the browser.
+- Presets with reported load errors are skipped for the session. After eight consecutive attempted loads fail, pause rather than stall the interface. This cannot protect against a native crash inside projectM or a GPU driver.
+- Added shared texture lookup: preset-local assets first, collection `textures/`, an optional custom folder, then the installed texture pack. Avoid recreating the texture manager when paths haven't changed; remove a redundant second reset.
+- Split renderer, library model, shuffle deck and browser out of the main controller. Added case/diacritic-insensitive multiword name/category search and a virtualized native table with double-click/Return playback.
+- Library tests exposed the `/var` versus `/private/var` path alias. Canonicalize existing paths with realpath to preserve relative categories and deduplicate texture paths.
+- Audio tests and library/shuffle tests pass. GPU smoke tests pass for both demo presets and reject the missing-file case.
+- New external-texture fixture: 2,921,600 lit pixels and 2,921,519 changing pixels with the pack; zero lit/changed pixels when the asset root is hidden. Both outcomes are asserted by `scripts/texture-smoke-test.sh`.
+- Correction to the initial demo verification: Prism was missing its MilkDrop 2 shader-version header, so the original smoke test demonstrated rendering but did not prove its composite shader ran. Added explicit version headers to Prism and the texture fixture; the shader path is now exercised and passes.
+- Manual checks so far: all 9,795 presets discovered, ten-second automatic switching changes the preset, manual shuffle resets countdown, browser search `martin fractal` returns 172 results, no-match search disables Play. Testing also revealed the original Cmd+A audio shortcut intercepted Select All; moved audio to Option+Cmd+A and added standard Edit commands.

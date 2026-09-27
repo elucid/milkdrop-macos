@@ -1,3 +1,6 @@
+MILKDROP_PRESET_VERSION=201
+PSVERSION_WARP=0
+PSVERSION_COMP=2
 [preset00]
 // Original preset, Copyright 2026 elucid, MIT license.
 fDecay=0.950000
