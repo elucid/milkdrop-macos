@@ -75,3 +75,9 @@ Commit and push small working milestones. Record the exact checks performed, kno
 - Final browser verification: Cmd+A now replaces the search text without switching audio. `martin mandel` returns 26 results; selecting `martin - castle in the air` and pressing Return loads it. Cmd+W closes the browser and resumes the countdown.
 - Restart verified that the test interval (10 seconds) persisted. Restored 30 seconds afterward. Asset installer rerun correctly reports both checkouts already installed without replacing them.
 - Left the final app running with all 9,795 presets, automatic 30-second shuffle, and system-audio mode restored. No assertion that every preset in the collection is compatible; broad batch validation remains a TODO.
+
+## 2026-09-26 — portable collection discovery
+
+- Added fallback discovery of `Contents/Resources/Assets` inside a transferred app. User-installed collections/textures retain priority; an explicit `MILKDROP_ASSET_DIR` remains isolated and disables bundled fallback.
+- Added read-only `--check-assets` diagnostics so packaging can verify discovery without opening a window or changing preferences.
+- Nix build and both existing test suites pass. Verified `CFFIXED_USER_HOME` isolates Foundation's Application Support lookup for a fresh-user packaging check; an app without bundled assets correctly reports no installed collection.

@@ -71,13 +71,28 @@ NSString* MDAssetRoot(void) {
     NSString* support = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES).firstObject;
     return [support stringByAppendingPathComponent:@"MilkDrop macOS"];
 }
-NSString* MDInstalledCollection(void) { return [MDAssetRoot() stringByAppendingPathComponent:@"Collections/Cream of the Crop"]; }
+static NSArray<NSString*>* assetRoots(void) {
+    // Explicit overrides stay isolated (also used by the missing-texture test).
+    if (NSProcessInfo.processInfo.environment[@"MILKDROP_ASSET_DIR"].length) return @[MDAssetRoot()];
+    NSString* bundled = [NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"Assets"];
+    return bundled ? @[MDAssetRoot(), bundled] : @[MDAssetRoot()];
+}
+
+NSString* MDInstalledCollection(void) {
+    for (NSString* root in assetRoots()) {
+        NSString* collection = [root stringByAppendingPathComponent:@"Collections/Cream of the Crop"];
+        BOOL directory = NO;
+        if ([NSFileManager.defaultManager fileExistsAtPath:collection isDirectory:&directory] && directory) return collection;
+    }
+    return [MDAssetRoot() stringByAppendingPathComponent:@"Collections/Cream of the Crop"];
+}
 
 NSArray<NSString*>* MDTexturePaths(NSString* preset, NSString* collectionRoot, NSString* customTextures) {
     NSString* local = preset.stringByDeletingLastPathComponent;
-    NSArray* candidates = @[local ?: @"", [local stringByAppendingPathComponent:@"textures"] ?: @"",
+    NSMutableArray* candidates = [NSMutableArray arrayWithArray:@[local ?: @"", [local stringByAppendingPathComponent:@"textures"] ?: @"",
         collectionRoot.length ? [collectionRoot stringByAppendingPathComponent:@"textures"] : @"",
-        customTextures ?: @"", [MDAssetRoot() stringByAppendingPathComponent:@"Textures/MilkDrop"]];
+        customTextures ?: @""]];
+    for (NSString* root in assetRoots()) [candidates addObject:[root stringByAppendingPathComponent:@"Textures/MilkDrop"]];
     NSMutableOrderedSet<NSString*>* paths = [NSMutableOrderedSet new];
     for (NSString* candidate in candidates) {
         BOOL directory = NO;

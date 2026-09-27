@@ -315,10 +315,21 @@ static NSString* initialPreset;
 
 int main(int argc, const char* argv[]) {
     @autoreleasepool {
+        // Read-only diagnostic for verifying a transferred app without opening
+        // windows, accessing audio, or changing the user's saved preferences.
+        if (argc == 2 && strcmp(argv[1], "--check-assets") == 0) {
+            NSString* collection = MDInstalledCollection();
+            NSError* error = nil;
+            MDPresetLibrary* library = [MDPresetLibrary scanFolder:collection error:&error];
+            printf("Collection: %s\nPresets: %lu\n", collection.fileSystemRepresentation, (unsigned long)library.presets.count);
+            for (NSString* path in MDTexturePaths(nil, collection, nil)) printf("Texture path: %s\n", path.fileSystemRepresentation);
+            if (error) fprintf(stderr, "%s\n", error.localizedDescription.UTF8String);
+            return library.presets.count && !error ? 0 : 1;
+        }
         for (int i = 1; i < argc; ++i) {
             if (strcmp(argv[i], "--smoke-test") == 0 && i+1 < argc) smokeOutput = [NSString stringWithUTF8String:argv[++i]];
             else if (strcmp(argv[i], "--preset") == 0 && i+1 < argc) initialPreset = [NSString stringWithUTF8String:argv[++i]];
-            else { fprintf(stderr, "Usage: MilkDropMac [--preset file.milk] [--smoke-test screenshot.png]\n"); return 2; }
+            else { fprintf(stderr, "Usage: MilkDropMac [--preset file.milk] [--smoke-test screenshot.png] | --check-assets\n"); return 2; }
         }
         [NSApplication sharedApplication];
         [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
