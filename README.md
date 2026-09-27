@@ -37,6 +37,8 @@ The app bundles its projectM dynamic library, so it can be moved out of the buil
 
 ## Preset collection and textures
 
+For a single-file transfer to another Mac, see **Sharing the app** below. Complete packages include these assets inside the app; development builds keep using the separate installation described here.
+
 `./scripts/install-assets.sh` downloads pinned upstream checkouts into:
 
 ```text
@@ -49,7 +51,24 @@ The installer preserves upstream source/notices, is safe to rerun, and refuses t
 
 At startup the app restores your selected collection, otherwise loads the installed Cream of the Crop pack, and falls back to the two demo presets if the pack is absent. **File → Use Cream of the Crop** switches back from another folder. **File → Open Preset Folder** lets you restrict shuffle to one category or use another collection.
 
-Textures are searched in the preset's directory and its `textures` subfolder, the selected collection's `textures` directory, an optional custom texture directory, then the installed shared pack. Choose the optional directory with **File → Choose Shared Texture Folder**. Local textures take precedence; missing images may still produce a placeholder without a preset-load error.
+Textures are searched in the preset's directory and its `textures` subfolder, the selected collection's `textures` directory, an optional custom texture directory, then the installed shared pack and the bundled pack (when present). Choose the optional directory with **File → Choose Shared Texture Folder**. Local textures take precedence; missing images may still produce a placeholder without a preset-load error. An explicit `MILKDROP_ASSET_DIR` disables bundled fallback.
+
+## Sharing the app
+
+From a clean, committed checkout, run:
+
+```sh
+./scripts/package.sh
+# Optional: ./scripts/package.sh /absolute/output/directory
+```
+
+This installs the pinned assets if needed, builds/tests the app, and creates `work/releases/MilkDropMac-0.1.0-arm64-complete.pkg` and `.zip`. **Send either file; each includes everything.** Both contain the app, 9,795 presets, shared textures, upstream notices, and a complete corresponding source archive. The app is ad-hoc signed for integrity but is not Developer ID signed or notarized. Packages remain local; this command does not upload a release.
+
+The `.pkg` installs `/Applications/MilkDropMac.app` and may ask for an administrator password. It has no installation scripts and does not modify the recipient's personal asset folders. Bundle relocation is disabled so it will not update a development checkout instead of Applications. The ZIP can be unzipped and dragged into Applications without using Installer. Assets are read directly from `Contents/Resources/Assets`; no first-run download is needed. Removing the app also removes its bundled assets.
+
+Requires Apple Silicon and targets macOS 14.2+. Runtime validation so far is only on macOS 26.5.1. If Gatekeeper blocks the app/installer, try opening it, then use System Settings → Privacy & Security → Open Anyway ([Apple instructions](https://support.apple.com/102445)). Audio permission is requested separately when the recipient enables System Audio. Nix and Xcode are not required to run the app.
+
+The package includes `Read Me.html` and `Contents/Resources/Source/Provenance.txt` with revisions and source information. Extract the accompanying source archive into an empty folder to rebuild; it includes the renderer and nested dependencies without Git metadata. `MilkDropMac.app/Contents/MacOS/MilkDropMac --check-assets` prints collection/texture paths and the preset count without starting the UI.
 
 ## Use
 
@@ -88,4 +107,4 @@ Run `./scripts/smoke-test.sh` in a logged-in graphical macOS session to render b
 
 See the [development log](docs/DEVELOPMENT.md), [remaining tasks](docs/TODO.md), and [third-party notices](THIRD_PARTY.md). The renderer is pinned as a Git submodule; its evaluator is pinned recursively. Keep submodules intact when cloning.
 
-The frontend and original demo presets are MIT licensed. projectM remains under its upstream licenses, principally LGPL-2.1-or-later. No proprietary MilkDrop3 release assets are bundled. Public binary distribution and a complete dependency-notice inventory remain tracked release tasks.
+The frontend and original demo presets are MIT licensed. projectM remains under its upstream licenses, principally LGPL-2.1-or-later. Community asset notices are preserved separately. Public release signing/notarization and a complete dependency-notice inventory remain tracked release tasks.

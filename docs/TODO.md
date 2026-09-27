@@ -9,6 +9,7 @@
 - [x] Audio buffering tests for channel conversion, overflow, and silence.
 - [ ] Manual checks with real music, multiple sample rates, device switching and permission denial.
 - [x] Relocatable development bundle (no Nix-store runtime dependencies).
+- [x] Complete local ZIP and installer packaging with presets, textures, corresponding source and original notices.
 - [ ] Public release packaging: complete dependency notices/source delivery, signing and notarization.
 - [ ] Preset compatibility corpus and performance measurements.
 - [ ] Assess `.milk2` format and double-preset mixing separately; no support claimed yet.

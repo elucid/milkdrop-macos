@@ -81,3 +81,10 @@ Commit and push small working milestones. Record the exact checks performed, kno
 - Added fallback discovery of `Contents/Resources/Assets` inside a transferred app. User-installed collections/textures retain priority; an explicit `MILKDROP_ASSET_DIR` remains isolated and disables bundled fallback.
 - Added read-only `--check-assets` diagnostics so packaging can verify discovery without opening a window or changing preferences.
 - Nix build and both existing test suites pass. Verified `CFFIXED_USER_HOME` isolates Foundation's Application Support lookup for a fresh-user packaging check; an app without bundled assets correctly reports no installed collection.
+
+## 2026-09-26 — complete local sharing packages
+
+- Added `scripts/package.sh` to rebuild/test from committed sources, archive pinned asset trees without Git metadata, include complete recursive corresponding source with revision provenance, ad-hoc sign the finished bundle, and produce a ZIP plus a script-free installer.
+- The complete app reads its assets in place. Installer targets `/Applications` with bundle relocation disabled; it does not select or write any user's home directory. Distribution declares arm64/macOS 14.2+ requirements. No Apple Developer ID or notarization is claimed.
+- Packaging remains local; only implementation and documentation are pushed to GitHub. Community notices stay attached to the assets, which are not relabeled MIT/public domain.
+- Made the build helper stop on CMake/build failure instead of potentially reaching tests against stale binaries.

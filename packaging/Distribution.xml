@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+  <title>MilkDrop macOS</title>
+  <options customize="never" require-scripts="false" hostArchitectures="arm64"/>
+  <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+  <volume-check><allowed-os-versions><os-version min="14.2"/></allowed-os-versions></volume-check>
+  <readme file="Read Me.html"/>
+  <choices-outline><line choice="default"/></choices-outline>
+  <choice id="default" visible="false"><pkg-ref id="com.elucid.milkdrop-macos"/></choice>
+  <pkg-ref id="com.elucid.milkdrop-macos" onConclusion="none">MilkDropMac-component.pkg</pkg-ref>
+</installer-gui-script>
