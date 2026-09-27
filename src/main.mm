@@ -3,6 +3,7 @@
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #include <projectM-4/projectM.h>
 #include "SyntheticAudio.hpp"
+#include "AudioCapture.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <exception>
@@ -18,11 +19,16 @@ static BOOL smokeFailed = NO;
     NSTimer* timer_;
     NSUInteger frame_;
     std::vector<unsigned char> previousPixels_;
+    AudioCapture capture_;
+    BOOL presetFailed_;
 }
 @property(nonatomic, copy) NSString* presetPath;
 @property(nonatomic, copy) void (^report)(NSString*);
 - (void)loadPreset:(NSString*)path;
 - (void)shutdown;
+- (void)toggleAudio;
+- (void)updateAudioStatus;
+- (void)markPresetFailed;
 @end
 
 static void presetFailure(const char* file, const char* message, void* context) {
@@ -30,10 +36,37 @@ static void presetFailure(const char* file, const char* message, void* context) 
     NSString* error = [NSString stringWithFormat:@"Preset failed: %s", message ?: "unknown error"];
     fprintf(stderr, "%s: %s\n", file ?: "preset", error.UTF8String);
     smokeFailed = YES;
+    [view markPresetFailed];
     if (view.report) view.report(error);
 }
 
 @implementation VisualizerView
+- (void)markPresetFailed { presetFailed_ = YES; }
+- (void)updateAudioStatus {
+    if (presetFailed_) return;
+    NSString* preset = self.presetPath.lastPathComponent.stringByDeletingPathExtension ?: @"No preset";
+    NSString* source = @"Demo audio";
+    if (capture_.running()) {
+        float peak = capture_.takePeak();
+        source = capture_.received() == 0 ? @"Waiting for system audio — check recording permission" :
+            [NSString stringWithFormat:@"System audio · %.0f kHz · level %.0f%%", capture_.sampleRate()/1000, peak*100];
+    }
+    if (self.report) self.report([NSString stringWithFormat:@"%@ · %@", source, preset]);
+}
+- (void)toggleAudio {
+    if (capture_.running()) {
+        capture_.stop();
+    } else {
+        std::string error = capture_.start();
+        if (!error.empty()) {
+            NSAlert* alert = [NSAlert new];
+            alert.messageText = @"System audio could not start";
+            alert.informativeText = [NSString stringWithUTF8String:error.c_str()];
+            [alert beginSheetModalForWindow:self.window completionHandler:nil];
+        }
+    }
+    [self updateAudioStatus];
+}
 - (instancetype)initWithFrame:(NSRect)frame {
     NSOpenGLPixelFormatAttribute attributes[] = {
         NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion4_1Core,
@@ -87,9 +120,10 @@ static void presetFailure(const char* file, const char* message, void* context) 
     projectm_set_texture_search_paths(renderer_, paths, 2);
     projectm_reset_textures(renderer_);
     smokeFailed = NO;
+    presetFailed_ = NO;
     try { projectm_load_preset_file(renderer_, path.fileSystemRepresentation, false); }
     catch (const std::exception& error) { presetFailure(path.UTF8String, error.what(), (__bridge void*)self); }
-    if (!smokeFailed && self.report) self.report([NSString stringWithFormat:@"Demo audio · %@", path.lastPathComponent.stringByDeletingPathExtension]);
+    if (!smokeFailed) [self updateAudioStatus];
 }
 - (std::vector<unsigned char>)readPixels {
     NSRect bounds = [self convertRectToBacking:self.bounds];
@@ -123,9 +157,21 @@ static void presetFailure(const char* file, const char* message, void* context) 
 - (void)drawRect:(NSRect)dirtyRect {
     if (!renderer_) return;
     [self.openGLContext makeCurrentContext];
-    float audio[735*2];
-    synth_.fill(audio, 735);
-    projectm_pcm_add_float(renderer_, audio, 735, PROJECTM_STEREO);
+    float audio[1024*2]{};
+    if (capture_.running()) {
+        bool received = false;
+        // Bound the work even if audio arrives faster than rendering.
+        for (int block = 0; block < 8; ++block) {
+            auto count = capture_.read(audio, std::min(1024u, projectm_pcm_get_max_samples()));
+            if (!count) break;
+            projectm_pcm_add_float(renderer_, audio, (unsigned)count, PROJECTM_STEREO);
+            received = true;
+        }
+        if (!received) projectm_pcm_add_float(renderer_, audio, 735, PROJECTM_STEREO);
+    } else {
+        synth_.fill(audio, 735);
+        projectm_pcm_add_float(renderer_, audio, 735, PROJECTM_STEREO);
+    }
     try { projectm_opengl_render_frame(renderer_); }
     catch (const std::exception& error) {
         fprintf(stderr, "Render failed: %s\n", error.what());
@@ -135,11 +181,13 @@ static void presetFailure(const char* file, const char* message, void* context) 
         return;
     }
     ++frame_;
+    if (frame_ % 15 == 0) [self updateAudioStatus];
     if (smokeOutput && frame_ == 60) previousPixels_ = [self readPixels];
     if (smokeOutput && frame_ == 120) [self finishSmokeTest];
     [self.openGLContext flushBuffer];
 }
 - (void)shutdown {
+    capture_.stop();
     [timer_ invalidate];
     timer_ = nil;
     if (renderer_) {
@@ -184,10 +232,20 @@ static void presetFailure(const char* file, const char* message, void* context) 
     next.frame = NSMakeRect(840, 7, 140, 28);
     next.autoresizingMask = NSViewMinXMargin;
     [content addSubview:next];
+    NSButton* audio = [NSButton buttonWithTitle:@"Demo / System Audio" target:self action:@selector(toggleAudio:)];
+    audio.frame = NSMakeRect(645, 7, 190, 28);
+    audio.autoresizingMask = NSViewMinXMargin;
+    [content addSubview:audio];
+    self.status.frame = NSMakeRect(16, 12, 610, 20);
+    self.status.lineBreakMode = NSLineBreakByTruncatingTail;
     [self createMenus];
     [self.window center];
     [self.window makeKeyAndOrderFront:nil];
     [NSApp activateIgnoringOtherApps:YES];
+    if (smokeOutput) dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 20 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        fprintf(stderr, "FAIL: render smoke test timed out\n");
+        std::exit(1);
+    });
 }
 - (void)createMenus {
     NSMenu* bar = [NSMenu new];
@@ -200,6 +258,11 @@ static void presetFailure(const char* file, const char* message, void* context) 
     NSMenuItem* open = [fileMenu addItemWithTitle:@"Open Preset…" action:@selector(openPreset:) keyEquivalent:@"o"]; open.target = self;
     NSMenuItem* next = [fileMenu addItemWithTitle:@"Next Preset" action:@selector(nextPreset:) keyEquivalent:@"n"]; next.target = self;
     file.submenu = fileMenu; [bar addItem:file];
+    NSMenuItem* audio = [NSMenuItem new];
+    NSMenu* audioMenu = [[NSMenu alloc] initWithTitle:@"Audio"];
+    NSMenuItem* toggle = [audioMenu addItemWithTitle:@"Switch Demo / System Audio" action:@selector(toggleAudio:) keyEquivalent:@"a"];
+    toggle.target = self;
+    audio.submenu = audioMenu; [bar addItem:audio];
     NSMenuItem* view = [NSMenuItem new];
     NSMenu* viewMenu = [[NSMenu alloc] initWithTitle:@"View"];
     NSMenuItem* fullscreen = [viewMenu addItemWithTitle:@"Toggle Full Screen" action:@selector(toggleFullScreen:) keyEquivalent:@"f"];
@@ -211,6 +274,7 @@ static void presetFailure(const char* file, const char* message, void* context) 
     self.presetIndex = (self.presetIndex + 1) % self.presets.count;
     [self.visualizer loadPreset:self.presets[self.presetIndex]];
 }
+- (void)toggleAudio:(id)sender { [self.visualizer toggleAudio]; }
 - (void)openPreset:(id)sender {
     NSOpenPanel* panel = [NSOpenPanel openPanel];
     panel.allowedContentTypes = @[[UTType typeWithFilenameExtension:@"milk"]];

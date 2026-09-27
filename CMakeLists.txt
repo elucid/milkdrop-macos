@@ -28,3 +28,10 @@ set_target_properties(MilkDropMac PROPERTIES
   MACOSX_BUNDLE_BUNDLE_NAME "MilkDrop macOS")
 add_custom_command(TARGET MilkDropMac POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/resources/presets" "$<TARGET_BUNDLE_DIR:MilkDropMac>/Contents/Resources/presets")
+
+target_sources(MilkDropMac PRIVATE src/AudioCapture.mm)
+target_link_libraries(MilkDropMac PRIVATE "-framework CoreAudio")
+enable_testing()
+add_executable(audio_pipeline_test tests/audio_pipeline.cpp)
+target_include_directories(audio_pipeline_test PRIVATE src)
+add_test(NAME audio_pipeline COMMAND audio_pipeline_test)

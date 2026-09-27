@@ -4,9 +4,9 @@
 - [x] Native app bundle with projectM rendering a bundled original preset.
 - [x] Deterministic synthetic audio for renderer verification.
 - [ ] Open user .milk presets and folders; fullscreen and preset navigation.
-- [ ] Core Audio system-output capture, user permission flow, and useful errors.
+- [x] Core Audio system-output capture, user permission flow, and useful errors.
 - [x] Automated rendering smoke test that checks actual nonblack pixels.
-- [ ] Audio buffering tests for channel conversion, overflow, and silence.
+- [x] Audio buffering tests for channel conversion, overflow, and silence.
 - [ ] Manual checks with real music, multiple sample rates, device switching and permission denial.
 - [ ] Relocatable release bundle (no Nix-store runtime dependencies), signing and notarization.
 - [ ] Preset compatibility corpus and performance measurements.

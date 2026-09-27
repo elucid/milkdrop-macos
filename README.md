@@ -29,3 +29,7 @@ The app initially uses **synthetic demo audio** (it does not play sound). Use Fi
 Run `./scripts/smoke-test.sh` in a logged-in graphical macOS session to render both presets, verify nonblack and changing GPU pixels, check OpenGL errors, and save PNGs under `work/`. It also verifies that an invalid preset fails. The test opens temporary windows.
 
 This is currently a development bundle referencing the build tree and Nix store, not a distributable release.
+
+Select **Demo / System Audio** (or ⌘A) to visualize sound from other apps. macOS may ask for system-audio recording permission. Capture does not mute playback, record to disk, or transmit audio. Select the button again to stop capture and return to demo mode. If no samples arrive, start music and check System Settings → Privacy & Security → Screen & System Audio Recording. After changing devices or permissions, stop and restart capture.
+
+Run `ctest --test-dir build --output-on-failure` for the audio buffering and resampling tests (no recording permission needed).

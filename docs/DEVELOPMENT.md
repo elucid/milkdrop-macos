@@ -31,3 +31,14 @@ Commit and push small working milestones. Record the exact checks performed, kno
 - Aurora passed at 2000×1276 on the M5 Max: 1,657,219 lit pixels, 2,137,169 changed pixels, no GL errors. Visually inspected the PNG; it shows a flowing green/cyan ring.
 - Disabled CMake's FLEX/BISON discovery: the evaluator otherwise rewrites checked-in scanner files using the host tools. Restored only the generated files modified by our build; submodules remain unmodified.
 - Prism passed at 2000×1276: 1,138,113 lit pixels, 1,709,592 changed pixels, no GL errors. The missing-file case returned failure as expected, preventing false positives from projectM's fallback preset.
+
+## 2026-09-26 — system audio capture
+
+- Implemented a private, unmuted Core Audio global stereo process tap and a private aggregate capture device. Capture is opt-in via the Audio menu or bottom button; stopping destroys the callback, aggregate device, and tap.
+- Audio callback uses a bounded lock-free SPSC ring, no allocations and no projectM calls. All renderer calls remain on the main thread. Silence is submitted when capture has no samples; synthetic audio is never substituted while capture is active.
+- Supports packed Float32 mono/stereo, planar or interleaved. Linear streaming resampling to 44.1 kHz is for visualization only, not high-fidelity audio playback; out-of-range/NaN input is sanitized.
+- `ctest --test-dir build --output-on-failure` passed: ring overflow/wrap, 100,000-frame producer/consumer ordering, mono/stereo/planar/silent channel reads, invalid samples, and ramp interpolation at 22.05/44.1/48/96/192 kHz.
+- Reran GPU smoke suite successfully for Aurora, Prism and expected rejection of a missing preset.
+- Manual UI verification: Next Preset updates Aurora → Prism; fullscreen enters/exits; capture starts/stops. A locally generated quiet stereo tone played with `afplay` was captured at 48 kHz and the UI reported 2% peak (matching its amplitude). No captured audio is written to disk.
+- Core Audio tap auto-start means no callbacks before an application starts playing. The UI distinguishes waiting for audio from actual receipt. Zero-level buffers may mean silence or missing permission; do not claim permission success solely from callback receipt.
+- Still untested: permission denial/revocation, Bluetooth/default-output changes, sustained capture over long sessions, Intel builds and macOS 14.2 hardware.
