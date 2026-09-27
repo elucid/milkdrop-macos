@@ -25,9 +25,23 @@ target_compile_definitions(MilkDropMac PRIVATE GL_SILENCE_DEPRECATION)
 target_link_libraries(MilkDropMac PRIVATE projectM "-framework AppKit" "-framework OpenGL" "-framework UniformTypeIdentifiers")
 set_target_properties(MilkDropMac PROPERTIES
   MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/resources/Info.plist.in"
-  MACOSX_BUNDLE_BUNDLE_NAME "MilkDrop macOS")
-add_custom_command(TARGET MilkDropMac POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/resources/presets" "$<TARGET_BUNDLE_DIR:MilkDropMac>/Contents/Resources/presets")
+  MACOSX_BUNDLE_BUNDLE_NAME "MilkDrop macOS"
+  BUILD_WITH_INSTALL_RPATH TRUE
+  INSTALL_RPATH "@executable_path/../Frameworks")
+set_target_properties(projectM PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "")
+# Refresh resources even when only a preset changed. Link projectM dynamically
+# and put it inside the bundle so moving the app does not break the renderer.
+add_custom_target(bundle_resources ALL
+  COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_DIR:MilkDropMac>/Contents/Frameworks"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:projectM>" "$<TARGET_BUNDLE_DIR:MilkDropMac>/Contents/Frameworks/$<TARGET_SONAME_FILE_NAME:projectM>"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/resources/presets" "$<TARGET_BUNDLE_DIR:MilkDropMac>/Contents/Resources/presets"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_DIR:MilkDropMac>/Contents/Resources/Licenses"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" "$<TARGET_BUNDLE_DIR:MilkDropMac>/Contents/Resources/Licenses/Frontend.txt"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/vendor/projectm/LICENSE.txt" "$<TARGET_BUNDLE_DIR:MilkDropMac>/Contents/Resources/Licenses/projectM.txt"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/vendor/projectm/vendor/projectm-eval/LICENSE.md" "$<TARGET_BUNDLE_DIR:MilkDropMac>/Contents/Resources/Licenses/projectM-eval.txt"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/vendor/projectm/vendor/hlslparser/LICENSE" "$<TARGET_BUNDLE_DIR:MilkDropMac>/Contents/Resources/Licenses/hlslparser.txt"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/THIRD_PARTY.md" "$<TARGET_BUNDLE_DIR:MilkDropMac>/Contents/Resources/Licenses/THIRD_PARTY.md"
+  DEPENDS MilkDropMac)
 
 target_sources(MilkDropMac PRIVATE src/AudioCapture.mm)
 target_link_libraries(MilkDropMac PRIVATE "-framework CoreAudio")

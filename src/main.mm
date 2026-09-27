@@ -212,7 +212,7 @@ static void presetFailure(const char* file, const char* message, void* context) 
     self.presets = @[[presetDirectory stringByAppendingPathComponent:@"Aurora.milk"], [presetDirectory stringByAppendingPathComponent:@"Prism.milk"]];
     self.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1000, 680) styleMask:NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable|NSWindowStyleMaskResizable backing:NSBackingStoreBuffered defer:NO];
     self.window.title = @"MilkDrop macOS";
-    self.window.minSize = NSMakeSize(480, 360);
+    self.window.minSize = NSMakeSize(800, 360);
     self.window.delegate = self;
     self.window.collectionBehavior = NSWindowCollectionBehaviorFullScreenPrimary;
     self.window.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
@@ -256,6 +256,7 @@ static void presetFailure(const char* file, const char* message, void* context) 
     NSMenuItem* file = [NSMenuItem new];
     NSMenu* fileMenu = [[NSMenu alloc] initWithTitle:@"File"];
     NSMenuItem* open = [fileMenu addItemWithTitle:@"Open Preset…" action:@selector(openPreset:) keyEquivalent:@"o"]; open.target = self;
+    NSMenuItem* folder = [fileMenu addItemWithTitle:@"Open Preset Folder…" action:@selector(openPresetFolder:) keyEquivalent:@"O"]; folder.target = self;
     NSMenuItem* next = [fileMenu addItemWithTitle:@"Next Preset" action:@selector(nextPreset:) keyEquivalent:@"n"]; next.target = self;
     file.submenu = fileMenu; [bar addItem:file];
     NSMenuItem* audio = [NSMenuItem new];
@@ -280,6 +281,40 @@ static void presetFailure(const char* file, const char* message, void* context) 
     panel.allowedContentTypes = @[[UTType typeWithFilenameExtension:@"milk"]];
     [panel beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse response) {
         if (response == NSModalResponseOK) [self.visualizer loadPreset:panel.URL.path];
+    }];
+}
+- (void)openPresetFolder:(id)sender {
+    NSOpenPanel* panel = [NSOpenPanel openPanel];
+    panel.canChooseFiles = NO;
+    panel.canChooseDirectories = YES;
+    [panel beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse response) {
+        if (response != NSModalResponseOK) return;
+        NSURL* folder = panel.URL;
+        self.status.stringValue = @"Scanning presets…";
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            NSMutableArray<NSString*>* paths = [NSMutableArray new];
+            NSDirectoryEnumerator* files = [NSFileManager.defaultManager enumeratorAtURL:folder includingPropertiesForKeys:@[NSURLIsRegularFileKey] options:NSDirectoryEnumerationSkipsHiddenFiles|NSDirectoryEnumerationSkipsPackageDescendants errorHandler:nil];
+            for (NSURL* url in files) {
+                if ([url.pathExtension.lowercaseString isEqualToString:@"milk"]) {
+                    NSNumber* regular;
+                    [url getResourceValue:&regular forKey:NSURLIsRegularFileKey error:nil];
+                    if (regular.boolValue) [paths addObject:url.path];
+                }
+            }
+            [paths sortUsingSelector:@selector(localizedStandardCompare:)];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (!paths.count) {
+                    NSAlert* alert = [NSAlert new];
+                    alert.messageText = @"No .milk presets found";
+                    alert.informativeText = @"Choose a folder containing classic MilkDrop presets. Double presets (.milk2) are not supported yet.";
+                    [alert beginSheetModalForWindow:self.window completionHandler:nil];
+                    return;
+                }
+                self.presets = paths;
+                self.presetIndex = 0;
+                [self.visualizer loadPreset:self.presets.firstObject];
+            });
+        });
     }];
 }
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender { return YES; }

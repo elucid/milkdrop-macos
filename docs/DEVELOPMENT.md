@@ -42,3 +42,14 @@ Commit and push small working milestones. Record the exact checks performed, kno
 - Manual UI verification: Next Preset updates Aurora → Prism; fullscreen enters/exits; capture starts/stops. A locally generated quiet stereo tone played with `afplay` was captured at 48 kHz and the UI reported 2% peak (matching its amplitude). No captured audio is written to disk.
 - Core Audio tap auto-start means no callbacks before an application starts playing. The UI distinguishes waiting for audio from actual receipt. Zero-level buffers may mean silence or missing permission; do not claim permission success solely from callback receipt.
 - Still untested: permission denial/revocation, Bluetooth/default-output changes, sustained capture over long sessions, Intel builds and macOS 14.2 hardware.
+
+## 2026-09-26 — development bundle and preset folders
+
+- Added asynchronous recursive `.milk` folder discovery and a dedicated menu command; skip hidden files and package directories, sort naturally, and explain empty folders without claiming `.milk2` support.
+- Raised the minimum window width to keep audio controls accessible.
+- Added `scripts/build.sh` for recursive submodule setup, Nix build, and audio checks.
+- Bundled the projectM dylib under Contents/Frameworks and changed the executable's only rpath to `@executable_path/../Frameworks`. `otool -L` confirms the app and renderer otherwise link only Apple system libraries/frameworks. No Nix runtime dependency remains.
+- Resources refresh on every normal build, including changes to presets alone. Bundled primary frontend/projectM/evaluator/HLSL parser licenses and source provenance; the full transitive notice inventory remains a task before public binary releases.
+- Audio tests pass after packaging changes. Native deployment target is 14.2, but runtime validation so far is only on macOS 26.5.1.
+- Relocation verification: copied the .app under `work/relocation-check/`, unset DYLD library-path overrides, and ran its bundled-preset smoke test. Passed at 2000×1276 with 1,643,223 lit pixels, 2,152,104 changed pixels, no GL errors.
+- Final manual folder check: ⇧⌘O opened the native folder panel, selecting `resources/presets` loaded Aurora, and Next Preset switched to Prism. Left the normal development app open in demo mode for the user.
