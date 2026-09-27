@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Reproducible Nix development shell and CMake build.
+- [x] Reproducible Nix development shell and CMake build.
 - [ ] Native app bundle with projectM rendering a bundled original preset.
 - [ ] Deterministic synthetic audio for renderer verification.
 - [ ] Open user .milk presets and folders; fullscreen and preset navigation.

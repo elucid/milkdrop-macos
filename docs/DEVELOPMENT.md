@@ -15,3 +15,10 @@
 ## Working practice
 
 Commit and push small working milestones. Record the exact checks performed, known limitations, and unresolved issues here; keep remaining tasks in TODO.md. Never label synthetic input as system audio, or a frontend around projectM as full MilkDrop3 compatibility.
+
+## 2026-09-26 — renderer builds with Nix
+
+- Created and pushed https://github.com/elucid/milkdrop-macos .
+- Locked Nixpkgs and selected its macOS SDK 15.5 (supports Core Audio taps); explicit Clang variables avoid the local `cc` alias.
+- `nix develop -c sh -c 'cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo && cmake --build build -j 8'` succeeded: 91 build steps, unmodified projectM 4.1.7 and its pinned evaluator, ARM64 dynamic library.
+- No full Xcode used. Nix fetched its SDK from the binary cache.
