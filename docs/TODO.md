@@ -15,3 +15,15 @@
 - [ ] Compare MD3 extensions (q33–q64, 16 waves/shapes, transitions, mashups) with projectM.
 - [ ] Decide future Metal strategy after the native prototype is working.
 - [ ] Intel macOS testing if required.
+
+## Preset library
+
+- [x] Install the pinned Cream of the Crop collection (9,795 presets).
+- [x] Timed no-repeat shuffle with selectable intervals and persistent settings.
+- [x] Shared texture pack lookup with an optional custom texture directory.
+- [x] Searchable native preset browser with name/category filtering and keyboard playback.
+- [x] Positive and negative GPU tests proving external textures are used.
+- [ ] Broader preset compatibility/performance sweep; isolate native failures in a separate test process.
+- [ ] Favorites, playback history, and a persistent user-managed exclusion list.
+- [ ] Optional shuffle of browser search results (currently the selected collection is shuffled).
+- [ ] Preset thumbnails and richer metadata.
