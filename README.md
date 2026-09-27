@@ -16,3 +16,16 @@ A Nix development environment and native frontend are being brought up. Full Xco
 ## Licensing
 
 Our frontend is MIT licensed. projectM remains under its upstream licenses (principally LGPL-2.1); see [third-party notices](THIRD_PARTY.md). No MilkDrop3 release assets are bundled.
+
+```sh
+nix develop
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake --build build -j 8
+open build/MilkDropMac.app
+```
+
+The app initially uses **synthetic demo audio** (it does not play sound). Use File → Open Preset to load a `.milk` file, ⌘N to cycle the bundled presets, and ⌃⌘F for fullscreen.
+
+Run `./scripts/smoke-test.sh` in a logged-in graphical macOS session to render both presets, verify nonblack and changing GPU pixels, check OpenGL errors, and save PNGs under `work/`. It also verifies that an invalid preset fails. The test opens temporary windows.
+
+This is currently a development bundle referencing the build tree and Nix store, not a distributable release.

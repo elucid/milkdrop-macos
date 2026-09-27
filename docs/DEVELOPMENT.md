@@ -22,3 +22,12 @@ Commit and push small working milestones. Record the exact checks performed, kno
 - Locked Nixpkgs and selected its macOS SDK 15.5 (supports Core Audio taps); explicit Clang variables avoid the local `cc` alias.
 - `nix develop -c sh -c 'cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo && cmake --build build -j 8'` succeeded: 91 build steps, unmodified projectM 4.1.7 and its pinned evaluator, ARM64 dynamic library.
 - No full Xcode used. Nix fetched its SDK from the binary cache.
+
+## 2026-09-26 — first native rendering
+
+- Added an AppKit/NSOpenGLView application with Retina backing resolution, fullscreen, preset opening and navigation, error reporting, and synthetic stereo input.
+- Original Aurora and Prism presets are MIT licensed; Prism exercises projectM's HLSL-to-GLSL shader translation.
+- Added `--smoke-test` with framebuffer readback, nonblack-pixel and temporal-change assertions, preset failure tracking, OpenGL error checking, and PNG output.
+- Aurora passed at 2000×1276 on the M5 Max: 1,657,219 lit pixels, 2,137,169 changed pixels, no GL errors. Visually inspected the PNG; it shows a flowing green/cyan ring.
+- Disabled CMake's FLEX/BISON discovery: the evaluator otherwise rewrites checked-in scanner files using the host tools. Restored only the generated files modified by our build; submodules remain unmodified.
+- Prism passed at 2000×1276: 1,138,113 lit pixels, 1,709,592 changed pixels, no GL errors. The missing-file case returned failure as expected, preventing false positives from projectM's fallback preset.

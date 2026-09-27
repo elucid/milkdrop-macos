@@ -14,4 +14,17 @@ set(ENABLE_SYSTEM_PROJECTM_EVAL OFF CACHE BOOL "" FORCE)
 set(ENABLE_SDL_UI OFF CACHE BOOL "" FORCE)
 set(ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
 set(ENABLE_DEBUG_POSTFIX OFF CACHE BOOL "" FORCE)
+set(CMAKE_DISABLE_FIND_PACKAGE_FLEX TRUE)
+set(CMAKE_DISABLE_FIND_PACKAGE_BISON TRUE)
+
 add_subdirectory(vendor/projectm)
+
+add_executable(MilkDropMac MACOSX_BUNDLE src/main.mm)
+target_compile_options(MilkDropMac PRIVATE -fobjc-arc -Wall -Wextra -Wno-unused-parameter -Wno-deprecated-declarations)
+target_compile_definitions(MilkDropMac PRIVATE GL_SILENCE_DEPRECATION)
+target_link_libraries(MilkDropMac PRIVATE projectM "-framework AppKit" "-framework OpenGL" "-framework UniformTypeIdentifiers")
+set_target_properties(MilkDropMac PROPERTIES
+  MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/resources/Info.plist.in"
+  MACOSX_BUNDLE_BUNDLE_NAME "MilkDrop macOS")
+add_custom_command(TARGET MilkDropMac POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/resources/presets" "$<TARGET_BUNDLE_DIR:MilkDropMac>/Contents/Resources/presets")

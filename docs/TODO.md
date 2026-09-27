@@ -1,11 +1,11 @@
 # Roadmap
 
 - [x] Reproducible Nix development shell and CMake build.
-- [ ] Native app bundle with projectM rendering a bundled original preset.
-- [ ] Deterministic synthetic audio for renderer verification.
+- [x] Native app bundle with projectM rendering a bundled original preset.
+- [x] Deterministic synthetic audio for renderer verification.
 - [ ] Open user .milk presets and folders; fullscreen and preset navigation.
 - [ ] Core Audio system-output capture, user permission flow, and useful errors.
-- [ ] Automated rendering smoke test that checks actual nonblack pixels.
+- [x] Automated rendering smoke test that checks actual nonblack pixels.
 - [ ] Audio buffering tests for channel conversion, overflow, and silence.
 - [ ] Manual checks with real music, multiple sample rates, device switching and permission denial.
 - [ ] Relocatable release bundle (no Nix-store runtime dependencies), signing and notarization.
